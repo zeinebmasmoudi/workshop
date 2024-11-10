@@ -1,0 +1,5 @@
+package com.ensi.controllers;
+
+public class ArticleRestController {
+
+}

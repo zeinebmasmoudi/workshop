@@ -1,0 +1,75 @@
+package com.ensi.controllers;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import com.sip.ams.entities.Article;
+import com.sip.ams.repository.ArticleRepository;
+import com.sip.ams.repository.ProviderRepository;
+import com.sip.ams.exception.ResourceNotFoundException;
+import java.util.List;
+import javax.validation.Valid;
+@RestController
+@RequestMapping({&quot;/articles&quot;})
+public class ArticleRestController {
+private final ArticleRepository articleRepository;
+private final ProviderRepository providerRepository;
+@Autowired
+public ArticleRestController(ArticleRepository articleRepository,
+ProviderRepository providerRepository) {
+this.articleRepository = articleRepository;
+this.providerRepository = providerRepository;
+}
+/*@Autowired
+private ArticleRepository articleRepository;
+@Autowired
+private ProviderRepository providerRepository;*/
+
+@GetMapping(&quot;/list&quot;)
+public List&lt;Article&gt; getAllArticles() {
+return (List&lt;Article&gt;) articleRepository.findAll();
+}
+@PostMapping(&quot;/add/{providerId}&quot;)
+Article createArticle(@PathVariable (value = &quot;providerId&quot;) Long providerId,
+@Valid @RequestBody Article article) {
+
+return providerRepository.findById(providerId).map(provider -&gt;
+
+{
+
+article.setProvider(provider);
+return articleRepository.save(article);
+}).orElseThrow(() -&gt; new ResourceNotFoundException(&quot;ProviderId
+
+&quot; + providerId + &quot; not found&quot;));
+
+}
+
+@PutMapping(&quot;/update/{providerId}/{articleId}&quot;)
+public Article updateArticle(@PathVariable (value = &quot;providerId&quot;) Long
+providerId,
+@PathVariable (value = &quot;articleId&quot;) Long
+articleId,
+@Valid @RequestBody Article articleRequest) {
+if(!providerRepository.existsById(providerId)) {
+throw new ResourceNotFoundException(&quot;ProviderId &quot; + providerId + &quot;
+not found&quot;);
+}
+return articleRepository.findById(articleId).map(article -&gt; {
+article.setPrice(articleRequest.getPrice());
+article.setLabel(articleRequest.getLabel());
+article.setLabel(articleRequest.getPicture());
+return articleRepository.save(article);
+}).orElseThrow(() -&gt; new ResourceNotFoundException(&quot;ArticleId &quot; +
+articleId + &quot;not found&quot;));
+}
+@DeleteMapping(&quot;/delete/{articleId}&quot;)
+public ResponseEntity&lt;?&gt; deleteArticle(@PathVariable (value = &quot;articleId&quot;)
+Long articleId) {
+return articleRepository.findById(articleId).map(article -&gt; {
+articleRepository.delete(article);
+return ResponseEntity.ok().build();
+}).orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Article not found
+with id &quot; + articleId));
+}
+}

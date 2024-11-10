@@ -1,0 +1,5 @@
+package com.ensi.entities;
+
+public class Article {
+
+}
